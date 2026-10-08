@@ -113,11 +113,34 @@ impl CPU{
             }
         }
     }
+    fn lda(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        let value = self.mem_read(addr);
+
+        self.reg_a = value;
+        self.update_zero_and_negative_flags(self.reg_a);
+    }
+
 
     pub fn run(&mut self) {
         loop {
-            {
-                break;
+            let code = self.mem_read(self.program_counter);
+            self.program_counter += 1;
+
+            match code {
+                0xA9 => {
+                    self.lda(&AddressingMode::Immediate);
+                    self.program_counter += 1;
+                }
+                0xA5 => {
+                    self.lda(&AddressingMode::ZeroPage);
+                    self.program_counter += 1;
+                }
+                0xAD => {
+                    self.lda(&AddressingMode::Absolute);
+                    self.program_counter += 2;
+                },
+                _ => todo!()
             }
         }
     }
