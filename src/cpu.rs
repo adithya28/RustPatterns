@@ -34,7 +34,7 @@ impl CPU{
     pub fn new() -> Self {
         CPU {
             reg_a: 0,
-            status: 0,
+            status: 0, //NV1B DIZC Bits 3 and 4 are irrelevant
             program_counter: 0,
             memory:[0;65536],
             reg_x:0,
@@ -113,12 +113,23 @@ impl CPU{
             }
         }
     }
+    fn update_zero_and_negative_flags(&self, register: &u8) {
+        if *register == 0
+        {
+
+        }
+        if register & 0b1000_0000 != 0 {}
+
+
+
+        todo!()
+    }
     fn lda(&mut self, mode: &AddressingMode) {
         let addr = self.get_operand_address(mode);
         let value = self.mem_read(addr);
 
         self.reg_a = value;
-        self.update_zero_and_negative_flags(self.reg_a);
+        self.update_zero_and_negative_flags(&self.reg_a);
     }
 
 
@@ -158,6 +169,13 @@ impl CPU{
     }
     pub fn interpret(&mut self, program: Vec<u8>) {
 
+    }
+    pub fn reset(&mut self) {
+        self.reg_a = 0;
+        self.reg_x = 0;
+        self.status = 0;
+        self.reg_y = 0;
+        self.program_counter = self.mem_read_u16(0xFFFC); // 6502 quirk at that specific address
     }
 
 
