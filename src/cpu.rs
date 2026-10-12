@@ -113,12 +113,18 @@ impl CPU{
             }
         }
     }
-    fn update_zero_and_negative_flags(&self, register: &u8) {
-        if *register == 0
-        {
-
+    fn update_zero_and_negative_flags(&mut self, register: u8) {
+        if register == 0 {
+            self.status = self.status | 0b0000_0010;
+        } else {
+            self.status = self.status & 0b1111_1101;
         }
-        if register & 0b1000_0000 != 0 {}
+
+        if register & 0b1000_0000 != 0 {
+            self.status = self.status | 0b1000_0000;
+        } else {
+            self.status = self.status & 0b0111_1111;
+        }
 
 
 
@@ -129,7 +135,7 @@ impl CPU{
         let value = self.mem_read(addr);
 
         self.reg_a = value;
-        self.update_zero_and_negative_flags(&self.reg_a);
+        self.update_zero_and_negative_flags(self.reg_a);
     }
 
 
