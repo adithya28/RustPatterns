@@ -1,22 +1,7 @@
 // a basic NES 6502 CPU
 
 use std::backtrace::BacktraceStatus;
-
-#[derive(Debug)]
-pub enum AddressingMode {
-    Immediate,
-    ZeroPage,
-    ZeroPageX,
-    ZeroPageY,
-    Absolute,
-    AbsoluteX,
-    AbsoluteY,
-    IndirectX,
-    IndirectY,
-    NoneAddressing,
-}
-
-
+use crate::instruction_spec::AddressingMode;
 
 pub struct CPU{
     pub reg_a: u8,
