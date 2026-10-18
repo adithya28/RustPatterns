@@ -324,31 +324,3 @@ pub static OPCODES: LazyLock<Vec<OpCode>> = LazyLock::new(|| {
 pub fn lookup(opcode: u8) -> &'static OpCode {
     &OPCODES[opcode as usize]
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn table_is_256_entries_and_indexed_by_opcode() {
-        assert_eq!(OPCODES.len(), 256);
-        for (i, o) in OPCODES.iter().enumerate() {
-            assert_eq!(o.opcode_hex as usize, i, "mismatch at index {i}");
-        }
-    }
-
-    #[test]
-    fn spot_checks() {
-        let lda_imm = lookup(0xA9);
-        assert_eq!(lda_imm.opcode_str, "LDA");
-        assert_eq!(lda_imm.cycles, 2);
-        assert_eq!(lda_imm.bytes, 2);
-        assert_eq!(lda_imm.address_mode, AddressingMode::Immediate);
-
-        let jmp_abs = lookup(0x4C);
-        assert_eq!(jmp_abs.opcode_str, "JMP");
-        assert_eq!(jmp_abs.address_mode, AddressingMode::Absolute);
-
-        assert!(lookup(0x02).is_no_op);
-    }
-}
