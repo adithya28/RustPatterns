@@ -1,7 +1,6 @@
 // a basic NES 6502 CPU
 
 use std::backtrace::BacktraceStatus;
-use crate::instruction_spec::AddressingMode;
 
 pub struct CPU{
     pub reg_a: u8,
@@ -34,10 +33,13 @@ impl CPU{
 
     pub fn run(&mut self) {
         loop {
-            let code = self.mem_read(self.program_counter);
-            self.program_counter += 1;
 
+            let code = self.mem_read(self.program_counter);
+            let temp_program_counter = self.program_counter;
+            self.program_counter += 1;
+            print!("{} {}", self.program_counter, &code);
             match code {
+
                            _ => todo!()
             }
         }
