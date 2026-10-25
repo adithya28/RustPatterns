@@ -1,6 +1,8 @@
 // a basic NES 6502 CPU
 
 use std::backtrace::BacktraceStatus;
+use std::ops::Deref;
+use crate::instruction_logic::{AddressingMode, OPCODES};
 
 pub struct CPU{
     pub reg_a: u8,
@@ -36,12 +38,9 @@ impl CPU{
 
             let code = self.mem_read(self.program_counter);
             let temp_program_counter = self.program_counter;
+            self.decode(code);
             self.program_counter += 1;
             print!("{} {}", self.program_counter, &code);
-            match code {
-
-                           _ => todo!()
-            }
         }
     }
     fn mem_read_u16(&mut self, pos: u16) -> u16 {
@@ -56,6 +55,11 @@ impl CPU{
         self.mem_write(pos, lo);
         self.mem_write(pos + 1, hi);
     }
+    pub fn decode(&mut self,code:u8)
+    {
+        let current_op = &(*OPCODES.get(&code).unwrap());
+        (current_op.action_function)(self,&current_op.address_mode);
+    }
     pub fn interpret(&mut self, program: Vec<u8>) {
 
     }
@@ -66,6 +70,5 @@ impl CPU{
         self.reg_y = 0;
         self.program_counter = self.mem_read_u16(0xFFFC); // 6502 quirk at that specific address
     }
-
 
 }

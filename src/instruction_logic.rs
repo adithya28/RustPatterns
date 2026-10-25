@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::LazyLock;
-use crate::cpu::CPU;
 
 // ============================================================
 // Status register: single u8, one bit per flag
@@ -19,6 +18,7 @@ const NEGATIVE: u8          = 0b1000_0000; // N  - bit 7
 const SP_ADDR: u16 = 0x0000;
 
 use AddressingMode::*;
+use crate::cpu::CPU;
 // ============================================================
 // Primitives
 // ============================================================
@@ -772,6 +772,3 @@ impl CPU {
     fn nop(&mut self, _m: &AddressingMode) {}
 }
 
-// ============================================================
-// Dispatch
-// ===
