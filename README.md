@@ -1,3 +1,7 @@
 # RustPatterns - An NES Emulator in Rust
 A simple repo to learn commonly used RUST patterns and programming practices
 We're starting by making a fully functional NES emu.
+
+following this guide : https://thomasw.dev/post/snes-mt-renderer/
+and
+https://bugzmanov.github.io/nes_ebook/chapter_3_1.html
