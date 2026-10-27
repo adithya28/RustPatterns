@@ -419,6 +419,7 @@ impl CPU {
         self.push((value & 0xFF) as u8);
     }
 
+
     fn pop_u16(&mut self) -> u16 {
         let lo = self.pop() as u16;
         let hi = self.pop() as u16;
