@@ -327,6 +327,7 @@ pub static OPCODES: LazyLock<HashMap<u8,OpCode>> = LazyLock::new(|| {
 
 
 });
+use AddressingMode::*;
 
 impl CPU {
 
@@ -471,14 +472,14 @@ impl CPU {
     fn txs(&mut self, _m: &AddressingMode) { self.set_sp(self.reg_x); } // no flags
 
     // --- Stack ---
-    fn pha(&mut self, _m: &AddressingMode) { self.push(self.reg_a); }
-    fn php(&mut self, _m: &AddressingMode) { self.push(self.status | BREAK | UNUSED); }
+    fn pha(&mut self, _m: &AddressingMode) { self.stack_push(self.reg_a); }
+    fn php(&mut self, _m: &AddressingMode) { self.stack_push(self.status | BREAK | UNUSED); }
     fn pla(&mut self, _m: &AddressingMode) {
         self.reg_a = self.stack_pop();
         self.update_zero_and_negative_flags(self.reg_a);
     }
     fn plp(&mut self, _m: &AddressingMode) {
-        self.status = self.pop() | UNUSED;
+        self.status = self.stack_pop() | UNUSED;
     }
 
     // --- Arithmetic ---
