@@ -1,41 +1,7 @@
 use std::collections::HashMap;
 use std::sync::LazyLock;
-
-// ============================================================
-// Status register: single u8, one bit per flag
-// ============================================================
-
-const CARRY: u8             = 0b0000_0001; // C  - bit 0
-const ZERO: u8              = 0b0000_0010; // Z  - bit 1
-const INTERRUPT_DISABLE: u8 = 0b0000_0100; // I  - bit 2
-const DECIMAL: u8           = 0b0000_1000; // D  - bit 3
-const BREAK: u8             = 0b0001_0000; // B  - bit 4
-const UNUSED: u8            = 0b0010_0000; // U  - bit 5 (always 1 on real chip)
-const OVERFLOW: u8          = 0b0100_0000; // V  - bit 6
-const NEGATIVE: u8          = 0b1000_0000; // N  - bit 7
-
-// Stack pointer lives at memory[0x0000] since the struct has no SP field.
-const SP_ADDR: u16 = 0x0000;
-
-use AddressingMode::*;
-use crate::cpu::CPU;
-// ============================================================
-// Primitives
-// ============================================================
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AddressingMode {
-    Immediate,
-    ZeroPage,
-    ZeroPageX,
-    ZeroPageY,
-    Absolute,
-    AbsoluteX,
-    AbsoluteY,
-    IndirectX,
-    IndirectY,
-    NoneAddressing,
-}
+use crate::cpu::{AddressingMode, CPU};
+use crate::constants::*;
 
 #[derive(Debug, Clone)]
 pub struct OpCode {
@@ -363,19 +329,6 @@ pub static OPCODES: LazyLock<HashMap<u8,OpCode>> = LazyLock::new(|| {
 });
 
 impl CPU {
-    pub(crate) fn mem_read(&self, addr: u16) -> u8 {
-        self.memory[addr as usize]
-    }
-
-    pub(crate) fn mem_write(&mut self, addr: u16, value: u8) {
-        self.memory[addr as usize] = value;
-    }
-
-    fn read_u16(&self, addr: u16) -> u16 {
-        let lo = self.mem_read(addr) as u16;
-        let hi = self.mem_read(addr.wrapping_add(1)) as u16;
-        (hi << 8) | lo
-    }
 
     // --- flag bit helpers (operate directly on self.status) ---
 
@@ -402,31 +355,6 @@ impl CPU {
         self.mem_write(SP_ADDR, value);
     }
 
-    fn push(&mut self, value: u8) {
-        let addr = 0x0100 | self.sp() as u16;
-        self.mem_write(addr, value);
-        self.set_sp(self.sp().wrapping_sub(1));
-    }
-
-    fn pop(&mut self) -> u8 {
-        self.set_sp(self.sp().wrapping_add(1));
-        let addr = 0x0100 | self.sp() as u16;
-        self.mem_read(addr)
-    }
-
-    fn push_u16(&mut self, value: u16) {
-        self.push((value >> 8) as u8);
-        self.push((value & 0xFF) as u8);
-    }
-
-
-    fn pop_u16(&mut self) -> u16 {
-        let lo = self.pop() as u16;
-        let hi = self.pop() as u16;
-        (hi << 8) | lo
-    }
-
-    // --- addressing ---
 
     /// Advances PC past the operand, returns the effective address.
     fn get_operand_address(&mut self, mode: &AddressingMode) -> u16 {
@@ -546,7 +474,7 @@ impl CPU {
     fn pha(&mut self, _m: &AddressingMode) { self.push(self.reg_a); }
     fn php(&mut self, _m: &AddressingMode) { self.push(self.status | BREAK | UNUSED); }
     fn pla(&mut self, _m: &AddressingMode) {
-        self.reg_a = self.pop();
+        self.reg_a = self.stack_pop();
         self.update_zero_and_negative_flags(self.reg_a);
     }
     fn plp(&mut self, _m: &AddressingMode) {
@@ -683,20 +611,20 @@ impl CPU {
     fn jsr(&mut self, mode: &AddressingMode) {
         let target = self.get_operand_address(mode);
         let return_addr = self.program_counter.wrapping_sub(1);
-        self.push_u16(return_addr);
+        self.stack_push_u16(return_addr);
         self.program_counter = target;
     }
     fn rts(&mut self, _m: &AddressingMode) {
-        self.program_counter = self.pop_u16().wrapping_add(1);
+        self.program_counter = self.stack_pop_u16().wrapping_add(1);
     }
     fn rti(&mut self, _m: &AddressingMode) {
-        self.status = self.pop() | UNUSED;
-        self.program_counter = self.pop_u16();
+        self.status = self.stack_pop() | UNUSED;
+        self.program_counter = self.stack_pop_u16();
     }
     fn brk(&mut self, _m: &AddressingMode) {
         let return_addr = self.program_counter.wrapping_add(1);
-        self.push_u16(return_addr);
-        self.push(self.status | BREAK | UNUSED);
+        self.stack_push_u16(return_addr);
+        self.stack_push(self.status | BREAK | UNUSED);
         self.set_flag(INTERRUPT_DISABLE, true);
         let lo = self.mem_read(0xFFFE) as u16;
         let hi = self.mem_read(0xFFFF) as u16;
